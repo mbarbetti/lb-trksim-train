@@ -84,13 +84,16 @@ class FeatherReader:
     """
    Loads feather datasets stored in multiple files as dask dataframes or tf.data.Datasets
     """
-    def __init__ (self, input_dir: str):
+    def __init__ (self, input_dir: str, max_files: int = 0x7FFF):
         with open(os.path.join(input_dir, "definitions.json")) as f:
             definitions = json.load(f)
     
         self._features = definitions['features']
         self._labels = definitions['labels']
-        self._data_files = glob(os.path.join(input_dir, "*.feather"))
+        self._data_files = sorted(
+            glob(os.path.join(input_dir, "*.feather")), 
+            key = lambda x: -os.stat(x).st_size  # order by file size
+        )[:max_files]
         
     @property
     def features(self):
